@@ -1,0 +1,260 @@
+body {
+  margin: 0;
+  background-color: #000;
+  font-family: "Yu Gothic", sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+
+#game-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#battle-field {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  overflow: hidden;
+}
+
+/* 背景 */
+#background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 110%;
+  height: 110%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* 敵の立ち絵 */
+#enemy-area {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 240px;
+  z-index: 2;
+}
+
+#enemy-sprite {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* ヒットエフェクト（あなた側の攻撃時のみ使用） */
+#effect {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  z-index: 3;
+  pointer-events: none;
+  display: none;
+}
+
+#effect-img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* ステータス表示 */
+#status-area {
+  position: absolute;
+  bottom: 150px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.status-box {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #fff;
+  padding: 10px 15px;
+  width: 48%;
+  box-sizing: border-box;
+  text-align: left;
+  font-size: 14px;
+}
+
+.status-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.status-text {
+  margin: 2px 0;
+}
+
+.hp-bar, .mp-bar {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  background: #333;
+  margin: 2px 0 6px 0;
+  overflow: hidden;
+}
+
+.hp-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #ff4040, #ffa040);
+  width: 100%;
+}
+
+.mp-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #4040ff, #40a0ff);
+  width: 100%;
+}
+
+/* コマンドウィンドウ */
+#command-area {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  height: 130px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid #fff;
+  z-index: 10;
+  display: flex;
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+#command-buttons {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#command-buttons button {
+  font-size: 12px;
+  padding: 3px 4px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #fff;
+  background: #111;
+  color: #fff;
+  transition: transform 0.05s ease, filter 0.05s ease, background 0.1s ease;
+}
+
+/* ボタンホバー・押下 */
+#command-buttons button:hover:not(:disabled) {
+  background: #222;
+}
+
+#command-buttons button:active:not(:disabled) {
+  transform: scale(0.95);
+  filter: brightness(0.85);
+  background: #000;
+}
+
+#command-buttons button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#message-area {
+  flex-grow: 1;
+  margin-left: 10px;
+  font-size: 14px;
+  text-align: left;
+  white-space: pre-line;
+  overflow: hidden;
+}
+
+#restart-btn {
+  margin-top: 2px;
+  font-size: 12px;
+  padding: 2px 4px;
+  display: none;
+}
+
+/* 敵の揺れアニメーション（あなたの攻撃を受けたとき） */
+.shake {
+  animation: shake 0.25s linear 0s 2;
+}
+
+@keyframes shake {
+  0% { transform: translate(-50%, 0); }
+  25% { transform: translate(calc(-50% + 5px), 0); }
+  50% { transform: translate(-50%, 0); }
+  75% { transform: translate(calc(-50% - 5px), 0); }
+  100% { transform: translate(-50%, 0); }
+}
+
+/* 画面揺れ（あなたがダメージを受けた時） */
+.screen-shake {
+  animation: screenShake 0.4s linear;
+}
+
+@keyframes screenShake {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(8px, 0); }
+  40%  { transform: translate(-8px, 0); }
+  60%  { transform: translate(6px, 0); }
+  80%  { transform: translate(-6px, 0); }
+  100% { transform: translate(0, 0); }
+}
+
+/* 画面フラッシュ（白・赤・黒） */
+.flash-white {
+  animation: flashWhite 0.3s ease-out;
+}
+@keyframes flashWhite {
+  0%   { background: rgba(255,255,255,0.4); }
+  100% { background: rgba(255,255,255,0); }
+}
+
+.flash-red {
+  animation: flashRed 0.4s ease-out;
+}
+@keyframes flashRed {
+  0%   { background: rgba(255,0,0,0.35); }
+  100% { background: rgba(255,0,0,0); }
+}
+
+.flash-black {
+  animation: flashBlack 0.4s ease-out;
+}
+@keyframes flashBlack {
+  0%   { background: rgba(0,0,0,0.35); }
+  100% { background: rgba(0,0,0,0); }
+}
+
+/* YOU WIN 表示 */
+#you-win {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 64px;
+  font-weight: bold;
+  color: #ffea00;
+  text-shadow: 4px 4px 8px #000;
+  z-index: 9999;
+  display: none;
+}

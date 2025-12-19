@@ -1,0 +1,61 @@
+<div id="game-wrapper">
+  <div id="battle-field">
+
+    <!-- 背景画像 -->
+    <img id="background" src="Haikei.png" alt="背景">
+
+    <!-- 敵表示 -->
+    <div id="enemy-area">
+      <img id="enemy-sprite" src="tk_tuujou.png" alt="敵">
+    </div>
+
+    <!-- エフェクト（あなたの攻撃専用） -->
+    <div id="effect">
+      <img id="effect-img" src="ec_buturi.png" alt="エフェクト">
+    </div>
+
+    <!-- ステータス -->
+    <div id="status-area">
+
+      <!-- あなた側 -->
+      <div class="status-box" id="player-status">
+        <div class="status-name">あなた</div>
+
+        <div class="status-text" id="player-hp-text"></div>
+        <div class="hp-bar">
+          <div class="hp-inner" id="player-hp-bar"></div>
+        </div>
+
+        <div class="status-text" id="player-mp-text"></div>
+        <div class="mp-bar">
+          <div class="mp-inner" id="player-mp-bar"></div>
+        </div>
+      </div>
+
+      <!-- 敵側 -->
+      <div class="status-box" id="enemy-status">
+        <div class="status-name">敵</div>
+        <div class="status-text" id="enemy-hp-text"></div>
+        <div class="hp-bar">
+          <div class="hp-inner" id="enemy-hp-bar"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- コマンドとメッセージ -->
+    <div id="command-area">
+      <div id="command-buttons">
+        <button id="btn-attack">攻撃</button>
+        <button id="btn-magic">奥義</button>
+        <button id="btn-defend">防御</button>
+        <button id="restart-btn">もう一度</button>
+      </div>
+      <div id="message-area"></div>
+    </div>
+
+    <!-- 勝利表示 -->
+    <div id="you-win">!! YOU WIN !!</div>
+
+  </div>
+</div>

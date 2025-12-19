@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ドラクエ風バトル</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+  fetch("main.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("content").innerHTML = html;
+
+      const script = document.createElement("script");
+      script.src = "game.js";
+      script.defer = true;  // ← これが重要
+      document.body.appendChild(script);
+    });
+</script>
+
+</body>
+</html>
