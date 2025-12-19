@@ -415,7 +415,7 @@ function initBattle() {
 
   setMessage(
     "酔ったオーナーがあらわれた！\n" +
-    "オーナーを倒して特典をゲットしよう！
+    "オーナーを倒して特典をゲットしよう！"
   );
   updateStatus();
 }
@@ -431,3 +431,4 @@ btnRestart.addEventListener("click", initBattle);
 // ゲーム開始
 
 initBattle();
+
