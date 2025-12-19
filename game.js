@@ -149,11 +149,11 @@ function shakeScreen() {
 // -------------------------
 function checkBattleEnd() {
   if (playerHP <= 0 && enemyHP <= 0) {
-    setMessage("相打ちになってしまった……。\n敵の勝利だ。");
+    setMessage("相打ちになってしまった……。\n酔ったオーナーの勝利だ。");
     enemySprite.src = "tk_shori.png";
     gameOver = true;
   } else if (enemyHP <= 0) {
-    setMessage("敵を倒した！\nあなたの勝利だ！");
+    setMessage("酔ったオーナーを倒した！\nあなたの勝利だ！");
     enemySprite.src = "tk_haiboku.jpg";  // 敵敗北画像
 
     // YOU WIN 表示
@@ -161,7 +161,7 @@ function checkBattleEnd() {
 
     gameOver = true;
   } else if (playerHP <= 0) {
-    setMessage("あなたは倒れてしまった……。\n敵の勝利だ。");
+    setMessage("あなたは倒れてしまった……。\n酔ったオーナーの勝利だ。");
     enemySprite.src = "tk_shori.png";
     gameOver = true;
   }
@@ -191,7 +191,7 @@ function playerTurnAttack() {
   const oldMP = playerMP;
   playerMP = Math.min(MAX_PLAYER_MP, playerMP + MP_GAIN_ON_ATTACK);
 
-  let msg = `あなたの攻撃！\n敵に ${damage} のダメージ！`;
+  let msg = `あなたの攻撃！\n酔ったオーナーに ${damage} のダメージ！`;
   if (playerMP > oldMP) {
     msg += `\nMPが ${playerMP - oldMP} 回復した。`;
   }
@@ -216,7 +216,7 @@ function playerTurnMagic() {
   let damage = randInt(PLAYER_MAGIC_MIN, PLAYER_MAGIC_MAX);
   let isCrit = false;
 
-  // 敵の強攻撃直後のターン限定で、奥義クリティカル（ダメージ倍）
+  // 酔ったオーナーの強攻撃直後のターン限定で、奥義クリティカル（ダメージ倍）
   if (magicCriticalTurn) {
     damage = Math.floor(damage * MAGIC_CRIT_MULTIPLIER);
     isCrit = true;
@@ -282,7 +282,7 @@ function enemyCharge() {
   enemyMP = MAX_ENEMY_MP;
 
   enemySprite.src = "tk_kougeki.png";
-  setMessage("敵は力をためている……！\n次のターンの攻撃が危険そうだ。");
+  setMessage("酔ったオーナーは力をためている……！\n次のターンの攻撃が危険そうだ。");
   updateStatus();
 
   setTimeout(() => {
@@ -307,7 +307,7 @@ function enemyNormalAttack() {
 
   changeEnemySprite("tk_kougeki.png", 250);
 
-  setMessage(`敵の攻撃！\nあなたは ${damage} のダメージを受けた！`);
+  setMessage(`酔ったオーナーの攻撃！\nあなたは ${damage} のダメージを受けた！`);
   updateStatus();
 
   // あなたが攻撃を受けたので画面を揺らす
@@ -366,7 +366,7 @@ function enemyStrongAttack() {
     }, 400);
   }
 
-  let msg = "敵の強烈な奥義！！\n";
+  let msg = "酔ったオーナーの強烈な奥義！！\n";
   if (wasDefending) {
     msg += `身を守っていたおかげで、ダメージは抑えられた。\nあなたは ${damage} のダメージを受けた！`;
   } else {
@@ -414,11 +414,11 @@ function initBattle() {
   setButtonsEnabled(true);
 
   setMessage(
-    "敵があらわれた！\n" +
-    "・攻撃でMPをためながら戦う。\n" +
-    "・敵が力をためた次のターンは超強力な攻撃！\n" +
-    "・その攻撃の直後、あなたの奥義はクリティカルになる。"
-  );
+  "酔ったオーナーがあらわれた！\n" +
+  "・攻撃でMPをためながら戦う。\n" +
+  "・酔ったオーナーが力をためた次のターンは超強力な攻撃！\n" +
+  "・その攻撃の直後、あなたの奥義はクリティカルになる。"
+　);
   updateStatus();
 }
 
@@ -432,3 +432,4 @@ btnRestart.addEventListener("click", initBattle);
 
 // ゲーム開始
 initBattle();
+
