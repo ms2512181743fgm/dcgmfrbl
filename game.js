@@ -19,7 +19,7 @@ const PLAYER_MAGIC_MIN = 620;
 const PLAYER_MAGIC_MAX = 740;
 const MAGIC_CRIT_MULTIPLIER = 2.0; // 強攻撃直後に奥義でクリティカル
 
-// 敵攻撃
+// 攻撃
 const ENEMY_PHYS_MIN = 420;
 const ENEMY_PHYS_MAX = 560;
 
@@ -227,7 +227,7 @@ function playerTurnMagic() {
   showEffect("magic");
   changeEnemySprite("tk_hidame.png", 400);
 
-  let msg = `あなたの奥義！\n敵に ${damage} のダメージ！`;
+  let msg = `あなたの奥義！\n酔ったオーナーに ${damage} のダメージ！`;
   if (isCrit) {
     msg += "\nクリティカルヒット！ 強攻撃の隙をついた！";
   }
@@ -432,4 +432,5 @@ btnRestart.addEventListener("click", initBattle);
 
 // ゲーム開始
 initBattle();
+
 
