@@ -3,23 +3,772 @@
 <head>
   <meta charset="UTF-8">
   <title>ドラクエ風バトル</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      font-family: "Yu Gothic", sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    #game-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ★ ここを4:3比率＋画面いっぱいに調整した版 ★ */
+    #battle-field {
+      position: relative;
+      width: 100vw;
+      height: calc(100vw * 0.75);              /* 4:3 を維持 */
+      max-height: 100vh;
+      max-width: calc(100vh * 1.3333);         /* 4:3 を維持 */
+      margin: auto;
+      overflow: hidden;
+    }
+
+    /* 背景 */
+    #background {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 110%;
+      height: 110%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    /* 敵の立ち絵 */
+    #enemy-area {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 240px;
+      z-index: 2;
+    }
+
+    #enemy-sprite {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* ヒットエフェクト（あなた側の攻撃時のみ使用） */
+    #effect {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      z-index: 3;
+      pointer-events: none;
+      display: none;
+    }
+
+    #effect-img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* ステータス表示 */
+    #status-area {
+      position: absolute;
+      bottom: 150px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      z-index: 5;
+    }
+
+    .status-box {
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #fff;
+      padding: 10px 15px;
+      width: 48%;
+      box-sizing: border-box;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .status-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .status-text {
+      margin: 2px 0;
+    }
+
+    .hp-bar, .mp-bar {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      background: #333;
+      margin: 2px 0 6px 0;
+      overflow: hidden;
+    }
+
+    .hp-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #ff4040, #ffa040);
+      width: 100%;
+    }
+
+    .mp-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #4040ff, #40a0ff);
+      width: 100%;
+    }
+
+    /* コマンドウィンドウ */
+    #command-area {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      height: 130px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 2px solid #fff;
+      z-index: 10;
+      display: flex;
+      box-sizing: border-box;
+      padding: 8px;
+    }
+
+    #command-buttons {
+      width: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    #command-buttons button {
+      font-size: 12px;
+      padding: 3px 4px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      box-sizing: border-box;
+      width: 100%;
+      border: 1px solid #fff;
+      background: #111;
+      color: #fff;
+      transition: transform 0.05s ease, filter 0.05s ease, background 0.1s ease;
+    }
+
+    /* ボタンホバー・押下 */
+    #command-buttons button:hover:not(:disabled) {
+      background: #222;
+    }
+
+    #command-buttons button:active:not(:disabled) {
+      transform: scale(0.95);
+      filter: brightness(0.85);
+      background: #000;
+    }
+
+    #command-buttons button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    #message-area {
+      flex-grow: 1;
+      margin-left: 10px;
+      font-size: 14px;
+      text-align: left;
+      white-space: pre-line;
+      overflow: hidden;
+    }
+
+    #restart-btn {
+      margin-top: 2px;
+      font-size: 12px;
+      padding: 2px 4px;
+      display: none;
+    }
+
+    /* 敵の揺れアニメーション（あなたの攻撃を受けたとき） */
+    .shake {
+      animation: shake 0.25s linear 0s 2;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(-50%, 0); }
+      25% { transform: translate(calc(-50% + 5px), 0); }
+      50% { transform: translate(-50%, 0); }
+      75% { transform: translate(calc(-50% - 5px), 0); }
+      100% { transform: translate(-50%, 0); }
+    }
+
+    /* 画面揺れ（あなたがダメージを受けた時） */
+    .screen-shake {
+      animation: screenShake 0.4s linear;
+    }
+
+    @keyframes screenShake {
+      0%   { transform: translate(0, 0); }
+      20%  { transform: translate(8px, 0); }
+      40%  { transform: translate(-8px, 0); }
+      60%  { transform: translate(6px, 0); }
+      80%  { transform: translate(-6px, 0); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* 画面フラッシュ（白・赤・黒） */
+    .flash-white {
+      animation: flashWhite 0.3s ease-out;
+    }
+    @keyframes flashWhite {
+      0%   { background: rgba(255,255,255,0.4); }
+      100% { background: rgba(255,255,255,0); }
+    }
+
+    .flash-red {
+      animation: flashRed 0.4s ease-out;
+    }
+    @keyframes flashRed {
+      0%   { background: rgba(255,0,0,0.35); }
+      100% { background: rgba(255,0,0,0); }
+    }
+
+    .flash-black {
+      animation: flashBlack 0.4s ease-out;
+    }
+    @keyframes flashBlack {
+      0%   { background: rgba(0,0,0,0.35); }
+      100% { background: rgba(0,0,0,0); }
+    }
+
+    /* YOU WIN 表示 */
+    #you-win {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 64px;
+      font-weight: bold;
+      color: #ffea00;
+      text-shadow: 4px 4px 8px #000;
+      z-index: 9999;
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
-<div id="content"></div>
+<div id="game-wrapper">
+  <div id="battle-field">
+
+    <!-- 背景画像 -->
+    <img id="background" src="Haikei.png" alt="背景">
+
+    <!-- 敵表示 -->
+    <div id="enemy-area">
+      <img id="enemy-sprite" src="tk_tuujou.png" alt="敵">
+    </div>
+
+    <!-- エフェクト（あなたの攻撃専用） -->
+    <div id="effect">
+      <img id="effect-img" src="ec_buturi.png" alt="エフェクト">
+    </div>
+
+    <!-- ステータス -->
+    <div id="status-area">
+
+      <!-- あなた側 -->
+      <div class="status-box" id="player-status">
+        <div class="status-name">あなた</div>
+
+        <div class="status-text" id="player-hp-text"></div>
+        <div class="hp-bar">
+          <div class="hp-inner" id="player-hp-bar"></div>
+        </div>
+
+        <div class="status-text" id="player-mp-text"></div>
+        <div class="mp-bar">
+          <div class="mp-inner" id="player-mp-bar"></div>
+        </div>
+      </div>
+
+      <!-- 敵側 -->
+      <div class="status-box" id="enemy-status">
+        <div class="status-name">酔ったオーナー</div>
+        <div class="status-text" id="enemy-hp-text"></div>
+        <div class="hp-bar">
+          <div class="hp-inner" id="enemy-hp-bar"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- コマンドとメッセージ -->
+    <div id="command-area">
+      <div id="command-buttons">
+        <button id="btn-attack">攻撃</button>
+        <button id="btn-magic">奥義</button>
+        <button id="btn-defend">防御</button>
+        <button id="restart-btn">もう一度</button>
+      </div>
+      <div id="message-area"></div>
+    </div>
+
+    <!-- 勝利表示 -->
+    <div id="you-win">!! YOU WIN !!</div>
+
+  </div>
+</div>
 
 <script>
-  fetch("main.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("content").innerHTML = html;
+  // -------------------------
+  // パラメータ設定
+  // -------------------------
+  const MAX_PLAYER_HP = 8054;
+  const MAX_ENEMY_HP  = 9358;
 
-      const script = document.createElement("script");
-      script.src = "game.js";
-      script.defer = true;  // ← これが重要
-      document.body.appendChild(script);
-    });
+  const MAX_PLAYER_MP = 100;
+  const MAGIC_COST    = 25;
+  const MP_GAIN_ON_ATTACK = 12;
+
+  // 敵MP（ためてから全部使う）
+  const MAX_ENEMY_MP = 100;
+
+  // プレイヤー攻撃
+  const PLAYER_PHYS_MIN = 360;
+  const PLAYER_PHYS_MAX = 460;
+
+  const PLAYER_MAGIC_MIN = 620;
+  const PLAYER_MAGIC_MAX = 740;
+  const MAGIC_CRIT_MULTIPLIER = 2.0; // 強攻撃直後に奥義でクリティカル
+
+  // 攻撃
+  const ENEMY_PHYS_MIN = 420;
+  const ENEMY_PHYS_MAX = 560;
+
+  const ENEMY_STRONG_MIN = 2300;
+  const ENEMY_STRONG_MAX = 2700;
+  const ENEMY_CHARGE_RATE = 0.22; // 力をためる確率
+  const STRONG_DEFEND_REDUCTION = 0.25; // 防御時ダメージ1/4
+
+  // -------------------------
+  // ゲーム状態
+  // -------------------------
+  let playerHP, enemyHP, playerMP, enemyMP;
+  let isPlayerTurn = true;
+  let playerDefending = false;
+
+  let enemyCharging = false;              // 力をためているか
+  let magicCriticalTurn = false;          // 強攻撃直後のターンで奥義クリティカル
+
+  let gameOver = false;
+
+  // -------------------------
+  // DOM取得
+  // -------------------------
+  const battleField   = document.getElementById("battle-field");
+  const enemySprite   = document.getElementById("enemy-sprite");
+  const effectDiv     = document.getElementById("effect");
+  const effectImg     = document.getElementById("effect-img");
+  const messageArea   = document.getElementById("message-area");
+  const youWinDiv     = document.getElementById("you-win");
+
+  const playerHpBar   = document.getElementById("player-hp-bar");
+  const playerMpBar   = document.getElementById("player-mp-bar");
+  const enemyHpBar    = document.getElementById("enemy-hp-bar");
+
+  const playerHpText  = document.getElementById("player-hp-text");
+  const playerMpText  = document.getElementById("player-mp-text");
+  const enemyHpText   = document.getElementById("enemy-hp-text");
+
+  const btnAttack  = document.getElementById("btn-attack");
+  const btnMagic   = document.getElementById("btn-magic");
+  const btnDefend  = document.getElementById("btn-defend");
+  const btnRestart = document.getElementById("restart-btn");
+
+  // -------------------------
+  // ユーティリティ
+  // -------------------------
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function setMessage(text, append = false) {
+    if (append) {
+      messageArea.textContent += "\n" + text;
+    } else {
+      messageArea.textContent = text;
+    }
+  }
+
+  function updateStatus() {
+    // 値を0未満にしない
+    playerHP = Math.max(0, playerHP);
+    playerMP = Math.max(0, playerMP);
+    enemyHP  = Math.max(0, enemyHP);
+    enemyMP  = Math.max(0, enemyMP);
+
+    // HP, MPバー
+    playerHpBar.style.width = (playerHP / MAX_PLAYER_HP * 100) + "%";
+    playerMpBar.style.width = (playerMP / MAX_PLAYER_MP * 100) + "%";
+    enemyHpBar.style.width  = (enemyHP  / MAX_ENEMY_HP * 100) + "%";
+
+    // 数値表示
+    playerHpText.textContent = `HP: ${playerHP} / ${MAX_PLAYER_HP}`;
+    playerMpText.textContent = `MP: ${playerMP} / ${MAX_PLAYER_MP}`;
+    enemyHpText.textContent  = `HP: ${enemyHP} / ${MAX_ENEMY_HP}`;
+  }
+
+  // あなた側の攻撃エフェクトのみ使用
+  function showEffect(type) {
+    if (type === "phys") {
+      effectImg.src = "ec_buturi.png";
+    } else if (type === "magic") {
+      effectImg.src = "ec_mahou.png";
+    } else {
+      effectImg.src = "ec_buturi.png";
+    }
+    effectDiv.style.display = "block";
+    effectDiv.classList.remove("flash");
+    void effectDiv.offsetWidth; // アニメーションリセット用
+    effectDiv.classList.add("flash");
+
+    setTimeout(() => {
+      effectDiv.style.display = "none";
+    }, 400);
+  }
+
+  function changeEnemySprite(tempSprite, duration = 400) {
+    const original = "tk_tuujou.png";
+    enemySprite.src = tempSprite;
+    enemySprite.classList.remove("shake");
+    void enemySprite.offsetWidth;
+    enemySprite.classList.add("shake");
+
+    setTimeout(() => {
+      enemySprite.classList.remove("shake");
+      enemySprite.src = original;
+    }, duration);
+  }
+
+  function setButtonsEnabled(enabled) {
+    btnAttack.disabled = !enabled;
+    btnMagic.disabled  = !enabled || playerMP < MAGIC_COST; // MP不足なら奥義不可
+    btnDefend.disabled = !enabled;
+  }
+
+  // 画面揺れ（あなたがダメージを受けた時）
+  function shakeScreen() {
+    battleField.classList.remove("screen-shake");
+    void battleField.offsetWidth;
+    battleField.classList.add("screen-shake");
+    setTimeout(() => {
+      battleField.classList.remove("screen-shake");
+    }, 400);
+  }
+
+  // -------------------------
+  // バトルロジック
+  // -------------------------
+  function checkBattleEnd() {
+    if (playerHP <= 0 && enemyHP <= 0) {
+      setMessage("相打ちになってしまった……。\n酔ったオーナーの勝利だ。");
+      enemySprite.src = "tk_shori.png";
+      gameOver = true;
+    } else if (enemyHP <= 0) {
+      setMessage("酔ったオーナーを倒した！\nあなたの勝利だ！");
+      enemySprite.src = "tk_haiboku.jpg";  // 敵敗北画像
+
+      // YOU WIN 表示
+      youWinDiv.style.display = "block";
+
+      gameOver = true;
+    } else if (playerHP <= 0) {
+      setMessage("あなたは倒れてしまった……。\n酔ったオーナーの勝利だ。");
+      enemySprite.src = "tk_shori.png";
+      gameOver = true;
+    }
+
+    if (gameOver) {
+      setButtonsEnabled(false);
+      btnRestart.style.display = "block";
+      return true;
+    }
+    return false;
+  }
+
+  // -------------------------
+  // あなたのターン
+  // -------------------------
+  function playerTurnAttack() {
+    if (gameOver || !isPlayerTurn) return;
+    setButtonsEnabled(false);
+    playerDefending = false;
+
+    const damage = randInt(PLAYER_PHYS_MIN, PLAYER_PHYS_MAX);
+    enemyHP -= damage;
+    showEffect("phys"); // あなた側だけエフェクト使用
+    changeEnemySprite("tk_hidame.png", 400);
+
+    // MP回復（攻撃でMPをためる）
+    const oldMP = playerMP;
+    playerMP = Math.min(MAX_PLAYER_MP, playerMP + MP_GAIN_ON_ATTACK);
+
+    let msg = `あなたの攻撃！\n酔ったオーナーに ${damage} のダメージ！`;
+    if (playerMP > oldMP) {
+      msg += `\nMPが ${playerMP - oldMP} 回復した。`;
+    }
+    setMessage(msg);
+    updateStatus();
+
+    if (checkBattleEnd()) return;
+
+    setTimeout(enemyTurn, 700);
+  }
+
+  function playerTurnMagic() {
+    if (gameOver || !isPlayerTurn) return;
+    if (playerMP < MAGIC_COST) {
+      setMessage("MPが足りない……！");
+      return;
+    }
+    setButtonsEnabled(false);
+    playerDefending = false;
+
+    playerMP -= MAGIC_COST;
+    let damage = randInt(PLAYER_MAGIC_MIN, PLAYER_MAGIC_MAX);
+    let isCrit = false;
+
+    // 酔ったオーナーの強攻撃直後のターン限定で、奥義クリティカル（ダメージ倍）
+    if (magicCriticalTurn) {
+      damage = Math.floor(damage * MAGIC_CRIT_MULTIPLIER);
+      isCrit = true;
+      magicCriticalTurn = false;
+    }
+
+    enemyHP -= damage;
+    showEffect("magic");
+    changeEnemySprite("tk_hidame.png", 400);
+
+    let msg = `あなたの奥義！\n酔ったオーナーに ${damage} のダメージ！`;
+    if (isCrit) {
+      msg += "\nクリティカルヒット！ 強攻撃の隙をついた！";
+    }
+    setMessage(msg);
+    updateStatus();
+
+    if (checkBattleEnd()) return;
+
+    setTimeout(enemyTurn, 700);
+  }
+
+  function playerTurnDefend() {
+    if (gameOver || !isPlayerTurn) return;
+    setButtonsEnabled(false);
+    playerDefending = true;
+
+    setMessage("あなたは身を守っている……。\n次の攻撃に備える。");
+    updateStatus();
+
+    setTimeout(enemyTurn, 700);
+  }
+
+  // -------------------------
+  // 敵のターン
+  // -------------------------
+  function enemyTurn() {
+    if (gameOver) return;
+    isPlayerTurn = false;
+
+    // すでに力をためている場合は、MPを全て使った強攻撃
+    if (enemyCharging) {
+      enemyCharging = false;
+      enemyStrongAttack();
+      return;
+    }
+
+    // ランダムで、「力をためる」か通常攻撃
+    const r = Math.random();
+    if (r < ENEMY_CHARGE_RATE) {
+      enemyCharge();
+    } else {
+      enemyNormalAttack();
+    }
+  }
+
+  function enemyCharge() {
+    if (gameOver) return;
+    enemyCharging = true;
+    playerDefending = false; // あなたの防御はターン経過でリセット
+
+    // 力をためる＝敵MPを最大までためるイメージ
+    enemyMP = MAX_ENEMY_MP;
+
+    enemySprite.src = "tk_kougeki.png";
+    setMessage("酔ったオーナーは力をためている……！\n次のターンの攻撃が危険そうだ。");
+    updateStatus();
+
+    setTimeout(() => {
+      enemySprite.src = "tk_tuujou.png";
+      isPlayerTurn = true;
+      if (!gameOver) {
+        setButtonsEnabled(true);
+      }
+    }, 700);
+  }
+
+  function enemyNormalAttack() {
+    if (gameOver) return;
+
+    const damage = randInt(ENEMY_PHYS_MIN, ENEMY_PHYS_MAX);
+
+    // 防御状態かどうかを先に判定してからダメージを与える
+    const wasDefending = playerDefending;
+    playerDefending = false;
+
+    playerHP -= damage;
+
+    changeEnemySprite("tk_kougeki.png", 250);
+
+    setMessage(`酔ったオーナーの攻撃！\nあなたは ${damage} のダメージを受けた！`);
+    updateStatus();
+
+    // あなたが攻撃を受けたので画面を揺らす
+    shakeScreen();
+
+    // 通常攻撃：防御していない場合のみ白フラッシュ
+    if (!wasDefending) {
+      battleField.classList.add("flash-white");
+      setTimeout(() => {
+        battleField.classList.remove("flash-white");
+      }, 300);
+    }
+
+    if (checkBattleEnd()) return;
+
+    setTimeout(() => {
+      isPlayerTurn = true;
+      if (!gameOver) {
+        setButtonsEnabled(true);
+      }
+    }, 700);
+  }
+
+  function enemyStrongAttack() {
+    if (gameOver) return;
+
+    changeEnemySprite("tk_kougeki.png", 400);
+
+    // MPを全て解放して強攻撃
+    const mpUsed = enemyMP;
+    enemyMP = 0;
+
+    let damage = randInt(ENEMY_STRONG_MIN, ENEMY_STRONG_MAX);
+
+    // MPに応じて少し上乗せ（演出として）
+    damage += Math.floor(mpUsed * 3);
+
+    const wasDefending = playerDefending;
+
+    if (wasDefending) {
+      damage = Math.floor(damage * STRONG_DEFEND_REDUCTION);
+    }
+
+    playerHP -= damage;
+
+    // 強攻撃のフラッシュ演出
+    if (wasDefending) {
+      battleField.classList.add("flash-black");
+      setTimeout(() => {
+        battleField.classList.remove("flash-black");
+      }, 400);
+    } else {
+      battleField.classList.add("flash-red");
+      setTimeout(() => {
+        battleField.classList.remove("flash-red");
+      }, 400);
+    }
+
+    let msg = "酔ったオーナーの強烈な奥義！！\n";
+    if (wasDefending) {
+      msg += `身を守っていたおかげで、ダメージは抑えられた。\nあなたは ${damage} のダメージを受けた！`;
+    } else {
+      msg += `防御していなかった……。\nあなたは ${damage} の大ダメージを受けた！`;
+    }
+
+    setMessage(msg);
+    updateStatus();
+
+    // あなたが攻撃を受けたので画面を揺らす
+    shakeScreen();
+
+    // この後の「あなたの奥義」はクリティカル
+    magicCriticalTurn = true;
+    playerDefending = false;
+
+    if (checkBattleEnd()) return;
+
+    setTimeout(() => {
+      isPlayerTurn = true;
+      if (!gameOver) {
+        setButtonsEnabled(true);
+      }
+    }, 900);
+  }
+
+  // -------------------------
+  // 初期化
+  // -------------------------
+  function initBattle() {
+    playerHP = MAX_PLAYER_HP;
+    enemyHP  = MAX_ENEMY_HP;
+    playerMP = MAX_PLAYER_MP;
+    enemyMP  = MAX_ENEMY_MP;
+
+    isPlayerTurn = true;
+    playerDefending = false;
+    enemyCharging = false;
+    magicCriticalTurn = false;
+    gameOver = false;
+
+    enemySprite.src = "tk_tuujou.png";
+    youWinDiv.style.display = "none";
+    btnRestart.style.display = "none";
+    setButtonsEnabled(true);
+
+    setMessage(
+      "酔ったオーナーがあらわれた！\n" +
+      "・攻撃でMPをためながら戦う。\n" +
+      "・酔ったオーナーが力をためた次のターンは超強力な攻撃！\n" +
+      "・その攻撃の直後、あなたの奥義はクリティカルになる。"
+    );
+    updateStatus();
+  }
+
+  // -------------------------
+  // イベント
+  // -------------------------
+  btnAttack.addEventListener("click", playerTurnAttack);
+  btnMagic.addEventListener("click", playerTurnMagic);
+  btnDefend.addEventListener("click", playerTurnDefend);
+  btnRestart.addEventListener("click", initBattle);
+
+  // ゲーム開始
+  initBattle();
 </script>
 
 </body>
